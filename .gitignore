@@ -1,4 +1,5 @@
-__pycache__
+/__pycache__
 inference_onnx.py 
 convert_onnx_to _openvino.py
 GUI.ipynb
+.DS_store
