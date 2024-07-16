@@ -14,9 +14,11 @@ from PyQt5.QtGui import QImage, QPixmap
 import time
 import numpy as np
 
+import onnxruntime as ort
+
 class Ui_Dialog(object):
-    threshold = 0.8
-    actions = np.array(["HANDCLAPPING","RUNNING","WALKING","STANDING"])
+    threshold = 0.5
+    actions = np.array(["Hi","Like","Diskile"])
     pTime = 0
     cTime = 0
     def setupUi(self, Dialog):
@@ -47,8 +49,8 @@ class Ui_Dialog(object):
         
         self.pose = pm.mediapipe_pose()
         self.pt = self.pose.mp_holistic.Holistic()
-        self.new_model = tf.keras.models.load_model('weight/action14_10.h5')
-        
+        # self.new_model = tf.keras.models.load_model('weight/action14_10.h5')
+        self.new_model = ort.InferenceSession('weight/md5.onnx')
         self.sequence = []
         self.sentence = []
         
@@ -69,8 +71,14 @@ class Ui_Dialog(object):
             keypoints = self.pose.extract_keypoints(results)
             self.sequence.append(keypoints)
             self.sequence = self.sequence[-30:]
+            # print(f"-"*30)
+            # print(f"Sequence: {self.sequence}")
             if len(self.sequence) == 30:
-                res = self.new_model.predict(np.expand_dims(self.sequence, axis=0))[0]
+                # res = self.new_model.predict(np.expand_dims(self.sequence, axis=0))[0]
+                res = self.new_model.run(None, {self.new_model.get_inputs()[0].name: np.expand_dims(self.sequence, axis=0).astype(np.float32)})[0]
+                res = res.flatten()
+                print(f"-"*60)
+                print(f"ONNX Ouput: {res}")
                 if res[np.argmax(res)] > self.threshold:
                     if len(self.sentence) > 0:
                         if self.actions[np.argmax(res)] != self.sentence[-1]:
@@ -107,7 +115,8 @@ class Ui_Dialog(object):
                 self.sequence.append(keypoints)
                 self.sequence = self.sequence[-30:]
                 if len(self.sequence) == 30:
-                    res = self.new_model.predict(np.expand_dims(self.sequence, axis=0))[0]
+                    res = self.new_model.run(None, {self.new_model.get_inputs()[0].name: np.expand_dims(self.sequence, axis=0).astype(np.float32)})[0]
+                    res = res.flatten()
                     if res[np.argmax(res)] > self.threshold:
                         if len(self.sentence) > 0:
                             if self.actions[np.argmax(res)] != self.sentence[-1]:
@@ -142,7 +151,6 @@ class Ui_Dialog(object):
 
 
 if __name__ == "__main__":
-    import sys
     app = QtWidgets.QApplication(sys.argv)
     Dialog = QtWidgets.QDialog()
     ui = Ui_Dialog()

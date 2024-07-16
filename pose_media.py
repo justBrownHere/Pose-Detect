@@ -19,9 +19,22 @@ class mediapipe_pose:
                                  self.mp_drawing.DrawingSpec(color=(112,112,112), thickness=2, circle_radius=1), 
                                  self.mp_drawing.DrawingSpec(color=(94,200,0), thickness=2, circle_radius=1)
                                  ) 
+
+
+        self.mp_drawing.draw_landmarks(image, results.left_hand_landmarks, self.mp_holistic.HAND_CONNECTIONS, 
+                                self.mp_drawing.DrawingSpec(color=(121,22,76), thickness=2, circle_radius=4), 
+                                self.mp_drawing.DrawingSpec(color=(121,44,250), thickness=2, circle_radius=2)
+                                ) 
+        self.mp_drawing.draw_landmarks(image, results.right_hand_landmarks, self.mp_holistic.HAND_CONNECTIONS, 
+                            self.mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=4), 
+                            self.mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2)
+                            )
+
     def extract_keypoints(self,results):
         pose = np.array([[res.x, res.y, res.z, res.visibility] for res in results.pose_landmarks.landmark]).flatten() if results.pose_landmarks else np.zeros(33*4)
-        return np.concatenate([pose])
+        lh = np.array([[res.x, res.y, res.z] for res in results.left_hand_landmarks.landmark]).flatten() if results.left_hand_landmarks else np.zeros(21*3)
+        rh = np.array([[res.x, res.y, res.z] for res in results.right_hand_landmarks.landmark]).flatten() if results.right_hand_landmarks else np.zeros(21*3)
+        return np.concatenate([pose, lh, rh])
     def BBox(self,image,results):
         xList,yList,bbox = [],[],[]
         if results.pose_landmarks:
