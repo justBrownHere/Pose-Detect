@@ -1,0 +1,34 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #020202;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 640px;
+    height: 480px;
+    margin: 20px auto;
+}
+
+#video {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.controls {
+    margin-top: 10px;
+}
+
+#probCanvas {
+    margin-left: 20px;
+}
