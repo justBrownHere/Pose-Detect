@@ -1,7 +1,7 @@
 const videoElement = document.getElementById("video");
 const canvasElement = document.getElementById("canvas");
 const canvasCtx = canvasElement.getContext("2d");
-
+const modelViewContainer = document.getElementById("model-container")
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 let render_w = 640; //640
@@ -11,7 +11,7 @@ canvasElement.height = render_h;
 renderer.setSize(render_w, render_h);
 renderer.setViewport(0, 0, render_w, render_h);
 renderer.shadowMap.enabled = true;
-document.body.appendChild(renderer.domElement);
+modelViewContainer.appendChild(renderer.domElement);
 
 const camera_ar = new THREE.PerspectiveCamera(45, render_w/render_h, 0.1, 1000);
 camera_ar.position.set(-1, 2, 50);
