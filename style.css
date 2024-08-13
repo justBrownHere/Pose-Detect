@@ -1,0 +1,36 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f0f0f0;
+}
+
+.container {
+    display: flex;
+    justify-content: space-between;
+    width: 1280px;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 640px;
+    height: 480px;
+}
+
+.model-wrapper {
+    width: 640px;
+    height: 480px;
+}
+
+#video {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
