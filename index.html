@@ -7,15 +7,25 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    
+
     <h1>MediaPip Pose Estimation with 3D Model</h1>
 
     <div class="container">
+        <canvas id="probCanvas" width="220" height="120"></canvas>
         <div class="video-wrapper">
             <video id="video" width="640px" height="480px" autoplay></video>
             <canvas id="canvas" width="640px" height="480px"></canvas>
+
         </div>
+
         <div class="model-wrapper" id="model-container"></div>
+       
+
     </div>
+    <div id="btdiv"><button id="toggleProbCanvas">Off</button></div>
+    
+    
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
@@ -27,7 +37,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="/js/convertPose.js"></script>
+    <script src="js/convertPose.js"></script>
 
 </body>
 </html>

@@ -3,34 +3,72 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f0f0f0;
+    background-color: rgb(226, 216, 216);
 }
 
 .container {
     display: flex;
     justify-content: space-between;
     width: 1380px;
+    margin-bottom: 20px; /* Thêm khoảng cách giữa container và nút */
 }
 
 .video-wrapper {
     position: relative;
     width: 640px;
     height: 480px;
+    border: black;
 }
 
 .model-wrapper {
     width: 640px;
     height: 480px;
+    border: black;
 }
 
 #video {
     position: absolute;
     top: 0;
     left: 0;
+    border: black;
 }
 
 #canvas {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+#probCanvas {
+    position: absolute;
+    top: 80px;
+    left: 0;
+    
+}
+
+#btdiv {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 100px; 
+}
+
+#toggleProbCanvas {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease; 
+}
+
+#toggleProbCanvas:hover {
+    background-color: #45a049;
+}
+
+#toggleProbCanvas:active {
+    background-color: #3e8e41;
+    transform: scale(0.95);
 }
