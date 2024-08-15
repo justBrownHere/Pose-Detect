@@ -1,3 +1,11 @@
+
+
+function logPose(poseLandmarks) {
+  console.log("Pose Landmarks:");
+  poseLandmarks.forEach((landmark, index) => {
+    console.log(`Landmark ${index}: x=${landmark.x.toFixed(3)}, y=${landmark.y.toFixed(3)}, z=${landmark.z.toFixed(3)}`);
+  });
+}
 const videoElement = document.getElementById("video");
 const canvasElement = document.getElementById("canvas");
 const canvasCtx = canvasElement.getContext("2d");
@@ -13,6 +21,22 @@ button.addEventListener("click", () => {
     button.textContent = "Off";
     button.style.backgroundColor = "red"; // Reset background color
   }
+});
+
+const button2 = document.getElementById("toggleProbCanvas2");
+
+button2.addEventListener("click", () => {
+  
+  if (button2.textContent === "male") {
+    button2.textContent = "female";
+
+    url = "3DModel/stefani.fbx" 
+  } else {
+    button2.textContent = "male";
+// Reset background color
+    url = "3DModel/remy.fbx";
+  }
+  load_model(url)
 });
 
 
@@ -33,11 +57,23 @@ socket.onerror = function (error) {
 let latestProbabilities = [0, 0, 0]; // Mảng để lưu trữ xác suất mới nhất nhận được từ server
 let holisticActive = true; // Trạng thái của MediaPipe Holistic
 let isProbCanvasVisible = true;
+let isProbCanvasVisible2 = true;
+
+let url = "3DModel/remy.fbx" 
+
 
 const toggleButton = document.getElementById("toggleProbCanvas");
 toggleButton.addEventListener("click", () => {
   isProbCanvasVisible = !isProbCanvasVisible;
   probCanvasElement.style.display = isProbCanvasVisible ? "block" : "none";
+});
+
+const toggleButton2 = document.getElementById("toggleProbCanvas2");
+toggleButton2.addEventListener("click", () => {
+  isProbCanvasVisible2 = !isProbCanvasVisible2;
+  console.log(isProbCanvasVisible2)
+  console.log(url)
+
 });
 
 socket.onmessage = function (event) {
@@ -94,6 +130,11 @@ function drawProbabilityBars(probabilities, actions, colors, ctx) {
     ctx.fillText(text, x, y);
   }
 }
+const videoTexture = new THREE.VideoTexture(videoElement);
+videoTexture.minFilter = THREE.LinearFilter;
+videoTexture.magFilter = THREE.LinearFilter;
+videoTexture.format = THREE.RGBFormat;
+
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 let render_w = 640; //640
@@ -126,15 +167,15 @@ camera_world.up.set(0, 1, 0);
 camera_world.lookAt(0, 1, 0);
 camera_world.updateProjectionMatrix();
 
-const controls = new THREE.OrbitControls(camera_ar, renderer.domElement);
-controls.enablePan = true;
-controls.enableZoom = true;
-controls.target.set(0.5, 0.5, 0.5);
-controls.update();
+// const controls = new THREE.OrbitControls(camera_ar, renderer.domElement);
+// controls.enablePan = true;
+// controls.enableZoom = true;
+// controls.target.set(0.5, 0.5, 0.5);
+// controls.update();
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0xa0a0a0);
+scene.background = videoTexture;
 // scene.fog = new THREE.Fog(0xa0a0a0, 10, 50);
 
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
@@ -168,37 +209,47 @@ let model,
   skeleton = null,
   skeleton_helper;
 let mesh_joint, mesh_surface;
+
+
+
 const loader = new THREE.FBXLoader();
-loader.load("3DModel/remy.fbx", (fbx) => {
-  model = fbx;
-  scene.add(fbx);
-  model.position.set(0, -18, -5);
-  model.scale.set(0.1, 0.1, 0.1);
-  let bones = [];
-  model.traverse((object) => {
-    // if (object.isMesh) {
-    //   object.castShadow = true;
-    //   if (object.name == "Beta_Joints") mesh_joint = object;
-    //   if (object.name == "Beta_Surface") mesh_surface = object;
-    // }
-    if (object.isBone) {
-      bones.push(object);
+
+function load_model(url){
+  loader.load(url, (fbx) => {
+    if (model) {
+      scene.remove(model); // Xóa mô hình cũ khỏi cảnh trước khi thêm mô hình mới
     }
+    model = fbx;
+    scene.add(fbx);
+    model.position.set(0, -18, -5);
+    model.scale.set(0.1, 0.1, 0.1);
+    let bones = [];
+    model.traverse((object) => {
+      // if (object.isMesh) {
+      //   object.castShadow = true;
+      //   if (object.name == "Beta_Joints") mesh_joint = object;
+      //   if (object.name == "Beta_Surface") mesh_surface = object;
+      // }
+      if (object.isBone) {
+        bones.push(object);
+      }
+    });
+  
+    bones.forEach((bone) => {
+      console.log(bone.name);
+    });
+  
+    skeleton = new THREE.Skeleton(bones);
+  
+    skeleton_helper = new THREE.SkeletonHelper(model);
+    skeleton_helper.visible = true;
+  
+    //   scene.add(skeleton_helper);
+    //   scene.add(mesh_joint);
+    //   scene.add(mesh_surface);
   });
-
-  bones.forEach((bone) => {
-    console.log(bone.name);
-  });
-
-  skeleton = new THREE.Skeleton(bones);
-
-  skeleton_helper = new THREE.SkeletonHelper(model);
-  skeleton_helper.visible = true;
-
-  //   scene.add(skeleton_helper);
-  //   scene.add(mesh_joint);
-  //   scene.add(mesh_surface);
-});
+}
+load_model(url)
 
 let name_to_index = {
   nose: 0,
@@ -477,6 +528,7 @@ function onResults2(results) {
     const leftHandLandmarks = results.leftHandLandmarks;
     const rightHandLandmarks = results.rightHandLandmarks;
 
+
     const pose =
       poseLandmarks !== undefined
         ? poseLandmarks.reduce(
@@ -511,6 +563,7 @@ function onResults2(results) {
   }
 
   // Add this code to send data to the server
+
   const keypoints = extractKeypoints(results);
   if (isProbCanvasVisible) {
     if (socket.readyState === WebSocket.OPEN) {
@@ -524,6 +577,7 @@ function onResults2(results) {
 
   if (results.poseLandmarks) {
     // pose
+    // logPose(results.poseLandmarks);
     let pose_landmarks_dict = {};
     let newJoints3D = {};
     results.poseLandmarks.forEach((landmark, i) => {
