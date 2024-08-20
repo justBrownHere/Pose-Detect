@@ -50,13 +50,15 @@ class BodyThread(threading.Thread):
     def run(self):
         mp_drawing = mp.solutions.drawing_utils
         mp_pose = mp.solutions.pose
+        mp_hands = mp.solutions.hands
 
         self.setup_comms()
         
         capture = CaptureThread()
         capture.start()
 
-        with mp_pose.Pose(min_detection_confidence=0.80, min_tracking_confidence=0.5, model_complexity = global_vars.MODEL_COMPLEXITY,static_image_mode = False,enable_segmentation = True) as pose: 
+        with mp_pose.Pose(min_detection_confidence=0.8, min_tracking_confidence=0.5, model_complexity = global_vars.MODEL_COMPLEXITY,static_image_mode = False,enable_segmentation = True) as pose, \
+            mp_hands.Hands(min_detection_confidence = 0.8, min_tracking_confidence = 0.5, model_complexity = global_vars.MODEL_COMPLEXITY) as hands: 
             
             while not global_vars.KILL_THREADS and capture.isRunning==False:
                 print("Waiting for camera and capture thread.")
@@ -75,30 +77,41 @@ class BodyThread(threading.Thread):
                 image.flags.writeable = global_vars.DEBUG
                 
                 # Detections
-                results = pose.process(image)
+                results_pose = pose.process(image)
+                results_hands = hands.process(image)
                 tf = time.time()
                 
-                # Rendering results
+                # Rendering results_pose
                 if global_vars.DEBUG:
                     if time.time()-self.timeSincePostStatistics>=1:
                         print("Theoretical Maximum FPS: %f"%(1/(tf-ti)))
                         self.timeSincePostStatistics = time.time()
                         
-                    if results.pose_landmarks:
-                        mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS, 
+                    if results_pose.pose_landmarks:
+                        mp_drawing.draw_landmarks(image, results_pose.pose_landmarks, mp_pose.POSE_CONNECTIONS, 
                                                 mp_drawing.DrawingSpec(color=(255, 100, 0), thickness=2, circle_radius=4),
                                                 mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2, circle_radius=2),
                                                 )
+                    if results_hands.multi_hand_landmarks:
+                        for hand_landmark in results_hands.multi_hand_landmarks:
+                            mp_drawing.draw_landmarks(image, hand_landmark, mp_hands.HAND_CONNECTIONS)
+
+
                     cv2.imshow('Body Tracking', image)
                     cv2.waitKey(3)
 
                 # Set up data for relay
                 self.data = ""
                 i = 0
-                if results.pose_world_landmarks:
-                    hand_world_landmarks = results.pose_world_landmarks
+                if results_pose.pose_world_landmarks:
+                    hand_world_landmarks = results_pose.pose_world_landmarks
                     for i in range(0,33):
                         self.data += "{}|{}|{}|{}\n".format(i,hand_world_landmarks.landmark[i].x,hand_world_landmarks.landmark[i].y,hand_world_landmarks.landmark[i].z)
+                
+                if results_hands.multi_hand_world_landmarks:
+                    for hand_landmark in results_hands.multi_hand_landmarks:
+                        for i,landmark in enumerate(hand_landmark.landmark):
+                            self.data += "Hand|{}|{}|{}|{}\n".format(i, landmark.x, landmark.y, landmark.z)
 
                 self.send_data(self.data)
                     
