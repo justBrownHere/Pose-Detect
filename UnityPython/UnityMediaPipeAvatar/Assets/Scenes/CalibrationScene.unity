@@ -1861,7 +1861,7 @@ MonoBehaviour:
   footTracking: 1
   footGroundOffset: 0.1
   useCalibrationData: 1
-  calibrationData: {fileID: 11400000, guid: d8c031e9eb983104e96c3af55ee9f2b6, type: 2}
+  calibrationData: {fileID: 0}
 --- !u!95 &505300998 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 9500000, guid: 49f2055d53eeb4e5a92af590a44bddee, type: 3}
@@ -4764,7 +4764,7 @@ MonoBehaviour:
   footTracking: 1
   footGroundOffset: 0.1
   useCalibrationData: 1
-  calibrationData: {fileID: 11400000, guid: d8c031e9eb983104e96c3af55ee9f2b6, type: 2}
+  calibrationData: {fileID: 0}
 --- !u!114 &1211505400
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6486,7 +6486,7 @@ MonoBehaviour:
   footTracking: 1
   footGroundOffset: 0.1
   useCalibrationData: 1
-  calibrationData: {fileID: 11400000, guid: d8c031e9eb983104e96c3af55ee9f2b6, type: 2}
+  calibrationData: {fileID: 0}
 --- !u!95 &1779266212 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 9500000, guid: 49f2055d53eeb4e5a92af590a44bddee, type: 3}

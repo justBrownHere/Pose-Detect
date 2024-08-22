@@ -79,9 +79,9 @@ class ServerUDP
             catch (SocketException ex)
             {
                 print("Connection lost.");
+                Console.WriteLine(ex.Message); // Ghi log chi tiết của ngoại lệ
                 System.Threading.Thread.Sleep(1000);
-
-                    StartListening();
+                StartListening();
                 break;
             }
         }
