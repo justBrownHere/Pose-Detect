@@ -1,15 +1,76 @@
-
-
 function logPose(poseLandmarks) {
   console.log("Pose Landmarks:");
   poseLandmarks.forEach((landmark, index) => {
-    console.log(`Landmark ${index}: x=${landmark.x.toFixed(3)}, y=${landmark.y.toFixed(3)}, z=${landmark.z.toFixed(3)}`);
+    console.log(
+      `Landmark ${index}: x=${landmark.x.toFixed(3)}, y=${landmark.y.toFixed(
+        3
+      )}, z=${landmark.z.toFixed(3)}`
+    );
   });
 }
+
+function printPoseLandmarks(poseLandmarks) {
+  // Define the names for each pose landmark according to the Mediapipe Pose model
+  const landmarkNames = [
+    "Nose",
+    "Left Eye Inner",
+    "Left Eye",
+    "Left Eye Outer",
+    "Right Eye Inner",
+    "Right Eye",
+    "Right Eye Outer",
+    "Left Ear",
+    "Right Ear",
+    "Mouth Left",
+    "Mouth Right",
+    "Left Shoulder",
+    "Right Shoulder",
+    "Left Elbow",
+    "Right Elbow",
+    "Left Wrist",
+    "Right Wrist",
+    "Left Pinky",
+    "Right Pinky",
+    "Left Index",
+    "Right Index",
+    "Left Thumb",
+    "Right Thumb",
+    "Left Hip",
+    "Right Hip",
+    "Left Knee",
+    "Right Knee",
+    "Left Ankle",
+    "Right Ankle",
+    "Left Heel",
+    "Right Heel",
+    "Left Foot Index",
+    "Right Foot Index",
+  ];
+
+  // Loop through each pose landmark and print the name and coordinates
+  poseLandmarks.forEach((landmark, index) => {
+    const name = landmarkNames[index];
+    console.log(
+      `${name}: (x: ${landmark.x.toFixed(2)}, y: ${landmark.y.toFixed(
+        2
+      )}, z: ${landmark.z.toFixed(2)})`
+    );
+  });
+}
+
+function distance(point1, point2) {
+  dx = Math.abs(point1.x - point2.x);
+  dy = Math.abs(point1.y - point2.y);
+  dz = Math.abs(point1.z - point2.z);
+  return parseFloat(Math.sqrt(dx * dx + dy * dy + dz * dz).toFixed(3));
+}
+
 const videoElement = document.getElementById("video");
 const canvasElement = document.getElementById("canvas");
 const canvasCtx = canvasElement.getContext("2d");
 const modelViewContainer = document.getElementById("model-container");
+const probCanvasElement = document.getElementById("probCanvas");
+const probCanvasCtx = probCanvasElement.getContext("2d");
 
 const button = document.getElementById("toggleProbCanvas");
 
@@ -26,19 +87,17 @@ button.addEventListener("click", () => {
 const button2 = document.getElementById("toggleProbCanvas2");
 
 button2.addEventListener("click", () => {
-  
   if (button2.textContent === "male") {
     button2.textContent = "female";
 
-    url = "3DModel/stefani.fbx" 
+    url = "3DModel/stefani.fbx";
   } else {
     button2.textContent = "male";
-// Reset background color
+    // Reset background color
     url = "3DModel/remy.fbx";
   }
-  load_model(url)
+  load_model(url);
 });
-
 
 const socket = new WebSocket("ws://localhost:8000/ws");
 
@@ -59,8 +118,7 @@ let holisticActive = true; // Trạng thái của MediaPipe Holistic
 let isProbCanvasVisible = true;
 let isProbCanvasVisible2 = true;
 
-let url = "3DModel/remy.fbx" 
-
+let url = "3DModel/remy.fbx";
 
 const toggleButton = document.getElementById("toggleProbCanvas");
 toggleButton.addEventListener("click", () => {
@@ -71,12 +129,47 @@ toggleButton.addEventListener("click", () => {
 const toggleButton2 = document.getElementById("toggleProbCanvas2");
 toggleButton2.addEventListener("click", () => {
   isProbCanvasVisible2 = !isProbCanvasVisible2;
-  console.log(isProbCanvasVisible2)
-  console.log(url)
-
+  console.log(isProbCanvasVisible2);
+  console.log(url);
 });
+const loadingOverlay = document.createElement("div");
+loadingOverlay.id = "loading-overlay"; // Set an ID for styling
+loadingOverlay.style.position = "absolute";
+loadingOverlay.style.top = "80px";
+loadingOverlay.style.left = "0";
+loadingOverlay.style.width = "200px";
+loadingOverlay.style.height = "100px";
+loadingOverlay.style.backgroundColor = "rgba(226, 216, 216)";
+// Semi-transparent background
+loadingOverlay.style.display = "flex"; // Center content
+loadingOverlay.style.justifyContent = "center";
+loadingOverlay.style.alignItems = "center";
+
+// **2. Add loading content (optional):**
+const loadingText = document.createElement("p");
+loadingText.textContent = "Waitting server...";
+loadingText.style.color = "black"; // White text
+loadingOverlay.appendChild(loadingText);
+
+// Semi-transparent background
+
+loadingOverlay.style.zIndex = 999;
+
+// Thêm loading overlay vào bên trong canvas
+document.body.appendChild(loadingOverlay);
+
+// Hiển thị loading khi bắt đầu xử lý dữ liệu
+function showLoading() {
+  loadingOverlay.style.display = "block";
+}
+
+// Ẩn loading khi xử lý xong
+function hideLoading() {
+  loadingOverlay.style.display = "none";
+}
 
 socket.onmessage = function (event) {
+  showLoading();
   const data = JSON.parse(event.data);
   if (data.error) {
     console.error("Error from server: ", data.error);
@@ -91,6 +184,9 @@ socket.onmessage = function (event) {
       [16, 117, 245],
     ];
     drawProbabilityBars(latestProbabilities, actions, colors, probCanvasCtx); // Thêm dòng này để log kết quả
+    if (latestProbabilities) {
+      hideLoading();
+    }
   }
 };
 
@@ -99,9 +195,6 @@ function sendKeypointsToServer(keypoints) {
     socket.send(keypoints.map((k) => k.toFixed(5)).join(","));
   }
 }
-
-const probCanvasElement = document.getElementById("probCanvas");
-const probCanvasCtx = probCanvasElement.getContext("2d");
 
 // Hàm vẽ thanh phần trăm
 function drawProbabilityBars(probabilities, actions, colors, ctx) {
@@ -135,7 +228,6 @@ videoTexture.minFilter = THREE.LinearFilter;
 videoTexture.magFilter = THREE.LinearFilter;
 videoTexture.format = THREE.RGBFormat;
 
-
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 let render_w = 640; //640
 const render_h = (render_w / 640) * 480; //480
@@ -162,7 +254,7 @@ const camera_world = new THREE.PerspectiveCamera(
   1,
   1000
 );
-camera_world.position.set(0, 1, 50);
+camera_world.position.set(0, -0.6, 0.2);
 camera_world.up.set(0, 1, 0);
 camera_world.lookAt(0, 1, 0);
 camera_world.updateProjectionMatrix();
@@ -210,46 +302,67 @@ let model,
   skeleton_helper;
 let mesh_joint, mesh_surface;
 
-
-
 const loader = new THREE.FBXLoader();
 
-function load_model(url){
-  loader.load(url, (fbx) => {
-    if (model) {
-      scene.remove(model); // Xóa mô hình cũ khỏi cảnh trước khi thêm mô hình mới
-    }
-    model = fbx;
-    scene.add(fbx);
-    model.position.set(0, -18, -5);
-    model.scale.set(0.1, 0.1, 0.1);
-    let bones = [];
-    model.traverse((object) => {
-      // if (object.isMesh) {
-      //   object.castShadow = true;
-      //   if (object.name == "Beta_Joints") mesh_joint = object;
-      //   if (object.name == "Beta_Surface") mesh_surface = object;
-      // }
-      if (object.isBone) {
-        bones.push(object);
+function load_model(url) {
+  const loadingOverlay = document.createElement("div");
+  loadingOverlay.id = "loading-overlay"; // Set an ID for styling
+  loadingOverlay.style.position = "absolute";
+  loadingOverlay.style.top = "0";
+  loadingOverlay.style.left = "0";
+  loadingOverlay.style.width = "100%";
+  loadingOverlay.style.height = "100%";
+  loadingOverlay.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+  // Semi-transparent background
+  loadingOverlay.style.display = "flex"; // Center content
+  loadingOverlay.style.justifyContent = "center";
+  loadingOverlay.style.alignItems = "center";
+
+  // **2. Add loading content (optional):**
+  const loadingText = document.createElement("p");
+  loadingText.textContent = "Loading model...";
+  loadingText.style.color = "white"; // White text
+  loadingOverlay.appendChild(loadingText);
+
+  modelViewContainer.appendChild(loadingOverlay);
+
+  loader.load(
+    url,
+    (fbx) => {
+      if (model) {
+        scene.remove(model); // Xóa mô hình cũ khỏi cảnh trước khi thêm mô hình mới
       }
-    });
-  
-    bones.forEach((bone) => {
-      console.log(bone.name);
-    });
-  
-    skeleton = new THREE.Skeleton(bones);
-  
-    skeleton_helper = new THREE.SkeletonHelper(model);
-    skeleton_helper.visible = true;
-  
-    //   scene.add(skeleton_helper);
-    //   scene.add(mesh_joint);
-    //   scene.add(mesh_surface);
-  });
+      model = fbx;
+      scene.add(fbx);
+      model.position.set(0, -67, 19);
+      model.scale.set(0.1, 0.1, 0.1);
+      let bones = [];
+      model.traverse((object) => {
+        if (object.isBone) {
+          bones.push(object);
+        }
+      });
+
+      bones.forEach((bone) => {
+        console.log(bone.name);
+      });
+
+      skeleton = new THREE.Skeleton(bones);
+
+      skeleton_helper = new THREE.SkeletonHelper(model);
+      skeleton_helper.visible = true;
+
+      if (model) {
+        modelViewContainer.removeChild(loadingOverlay);
+      }
+    },
+    () => {},
+    (error) => {
+      console.error("Error loading model:", error);
+    }
+  );
 }
-load_model(url)
+load_model(url);
 
 let name_to_index = {
   nose: 0,
@@ -445,6 +558,7 @@ function onResults2(results) {
         canvasElement.width,
         canvasElement.height
       );
+
       canvasCtx.globalCompositeOperation = "source-over";
       drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
         color: "#00FF00",
@@ -470,9 +584,15 @@ function onResults2(results) {
         color: "#00FFFF",
         lineWidth: 0.5,
       });
+
+      // drawLandmarks(canvasCtx, results.poseLandmarks, {
+      //   color: "#00FFFF",
+      //   lineWidth: 3,
+      // });
       canvasCtx.restore();
     }
   }
+  // Gọi hàm này để in ra tọa độ của các pose kèm tên
 
   function update3dpose(camera, dist_from_cam, offset, poseLandmarks) {
     // if the camera is orthogonal, set scale to 1
@@ -528,7 +648,6 @@ function onResults2(results) {
     const leftHandLandmarks = results.leftHandLandmarks;
     const rightHandLandmarks = results.rightHandLandmarks;
 
-
     const pose =
       poseLandmarks !== undefined
         ? poseLandmarks.reduce(
@@ -578,6 +697,7 @@ function onResults2(results) {
   if (results.poseLandmarks) {
     // pose
     // logPose(results.poseLandmarks);
+
     let pose_landmarks_dict = {};
     let newJoints3D = {};
     results.poseLandmarks.forEach((landmark, i) => {
@@ -605,9 +725,18 @@ function onResults2(results) {
     pose_left_wrist = pos_3d_landmarks["left_wrist"];
     pose_right_wrist = pos_3d_landmarks["right_wrist"];
     // add landmarks for spine
+    const rightAnkle = new THREE.Vector3()
+      .addVectors(
+        pos_3d_landmarks["left_ankle"],
+        pos_3d_landmarks["right_ankle"]
+      )
+      .multiplyScalar(0.5);
+    // const leftAnkle = landmarks[PoseLandmark.LEFT_ANKLE];
+
     const center_hips = new THREE.Vector3()
       .addVectors(pos_3d_landmarks["left_hip"], pos_3d_landmarks["right_hip"])
       .multiplyScalar(0.5);
+
     const center_shoulders = new THREE.Vector3()
       .addVectors(
         pos_3d_landmarks["left_shoulder"],
@@ -937,7 +1066,63 @@ function onResults2(results) {
       boneRightToe_End,
       R_chain_rightlower
     );
+    let neck_hip_distance = distance(center_hips, neck);
+    k_scale = 0.115 * Math.sqrt(neck_hip_distance);
+    model.scale.set(k_scale, k_scale, k_scale);
+
+    console.log("Visibility:", results.poseLandmarks[25]["visibility"]);
+    console.log(">>>>>>>>>>>>>>", model.position);
+    console.log("Pose", center_hips.x);
+    // model.position.set(
+    //   rightAnkle.x,
+    //   1 / (rightAnkle.y + 7),
+    //   rightAnkle.z * -(k_scale * 23)
+    // );
+    // let now = 0;
+    // let pre = 0;
+    // let diff = 0; // Khởi tạo biến diff
+    
+    // now = results.poseLandmarks[13]["visibility"];
+    // if (pre != now) {
+    //   diff = now - pre;
+    //   pre = results.poseLandmarks[13]["visibility"];
+    // } else {
+    //   pre = results.poseLandmarks[13]["visibility"];
+    // }
+    
+    
+
+    if(results.poseLandmarks[23]["visibility"]>0.15 && results.poseLandmarks[25]["visibility"]<0.5){
+      console.log("TH2")
+      model.position.set(
+        (center_hips.x-1)*10,
+        2 * center_hips.y - 3 * (k_scale * 85),
+        center_hips.z * -(k_scale * 31)
+      );
+    }
+    else{
+      if(results.poseLandmarks[25]["visibility"]>0.15){
+        console.log("TH3")
+        model.position.set(
+
+          (center_hips.x-1)*15,
+          2 * center_hips.y - 3 * (k_scale * 60),
+          center_hips.z * -(k_scale * 27)
+        );
+      }
+      else{
+        console.log("TH1")
+        model.position.set(
+          (center_hips.x-1)*5,
+          2 * center_hips.y - 3 * (k_scale * 98),
+          center_hips.z * -(k_scale * 32)
+        );
+      }
+    
+    }
+
   }
+
   if (results.leftHandLandmarks) {
     let hand_landmarks_dict = {};
     results.leftHandLandmarks.forEach((landmark, i) => {
